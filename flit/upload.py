@@ -9,6 +9,7 @@ import hashlib
 import logging
 import os
 from pathlib import Path
+from typing import Optional
 import requests
 import sys
 from urllib.parse import urlparse
@@ -211,7 +212,7 @@ def build_post_data(action, metadata:Metadata):
 
     return {k:v for k,v in d.items() if v}
 
-def upload_file(file:Path, metadata:Metadata, repo):
+def upload_file(file:Path, metadata:Metadata, repo, certificate:Optional[Path] = None):
     """Upload a file to an index server, given the index server details.
     """
     data = build_post_data('file_upload', metadata)
@@ -231,19 +232,24 @@ def upload_file(file:Path, metadata:Metadata, repo):
         data['sha256_digest'] = hashlib.sha256(content).hexdigest()
 
     log.info('Uploading %s...', file)
-    resp = requests.post(repo['url'],
-                         data=data,
-                         files=files,
-                         auth=(repo['username'], repo['password']),
-                        )
+    post_content = {"url":repo['url'],
+                    "data":data,
+                    "files":files,
+                    "auth":(repo['username'], repo['password']),
+    }
+
+    if isinstance(certificate, Path) and certificate.exists():
+        post_content["verify"] = certificate
+
+    resp = requests.post(**post_content)
     resp.raise_for_status()
 
 
-def do_upload(file:Path, metadata:Metadata, pypirc_path="~/.pypirc", repo_name=None):
+def do_upload(file:Path, metadata:Metadata, pypirc_path="~/.pypirc", repo_name=None, certificate:Optional[Path] = None):
     """Upload a file to an index server.
     """
     repo = get_repository(pypirc_path, repo_name)
-    upload_file(file, metadata, repo)
+    upload_file(file, metadata, repo, certificate)
 
     if repo['is_warehouse']:
         domain = urlparse(repo['url']).netloc
@@ -254,7 +260,7 @@ def do_upload(file:Path, metadata:Metadata, pypirc_path="~/.pypirc", repo_name=N
         log.info("Package is at %s/%s", repo['url'], metadata.name)
 
 
-def main(ini_path, repo_name, pypirc_path=None, formats=None, gen_setup_py=True):
+def main(ini_path, repo_name, pypirc_path=None, formats=None, gen_setup_py=True, certificate:Optional[Path] = None):
     """Build and upload wheel and sdist."""
     if pypirc_path is None:
         pypirc_path = PYPIRC_DEFAULT
@@ -265,6 +271,6 @@ def main(ini_path, repo_name, pypirc_path=None, formats=None, gen_setup_py=True)
     built = build.main(ini_path, formats=formats, gen_setup_py=gen_setup_py)
 
     if built.wheel is not None:
-        do_upload(built.wheel.file, built.wheel.builder.metadata, pypirc_path, repo_name)
+        do_upload(built.wheel.file, built.wheel.builder.metadata, pypirc_path, repo_name, certificate)
     if built.sdist is not None:
-        do_upload(built.sdist.file, built.sdist.builder.metadata, pypirc_path, repo_name)
+        do_upload(built.sdist.file, built.sdist.builder.metadata, pypirc_path, repo_name, certificate)
