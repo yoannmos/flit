@@ -123,10 +123,6 @@ def main(argv=None):
         help="Name of the repository to upload to (must be in the specified .pypirc file)"
     )
 
-    parser_publish.add_argument('--certificate',
-        help="Path of a public key certificate"
-    )
-
     # flit install --------------------------------------------
     parser_install = subparsers.add_parser('install',
         help="Install the package",
@@ -187,7 +183,7 @@ def main(argv=None):
         repository = args.repository or args.deprecated_repository
         from .upload import main
         main(args.ini_file, repository, args.pypirc, formats=set(args.format or []),
-                gen_setup_py=gen_setup_py(), certificate=args.certificate)
+                gen_setup_py=gen_setup_py())
 
     elif args.subcmd == 'install':
         from .install import Installer

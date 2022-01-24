@@ -137,7 +137,7 @@ def test_upload_pypirc_file(copy_sample):
             repo_name="test123",
             pypirc_path=pypirc,
         )
-        _, _, repo, _ = upload_file.call_args[0]
+        _, _, repo = upload_file.call_args[0]
 
         assert repo["url"] == pypirc3_repo
         assert repo["username"] == pypirc3_user
