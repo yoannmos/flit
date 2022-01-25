@@ -9,7 +9,6 @@ import hashlib
 import logging
 import os
 from pathlib import Path
-from typing import Optional
 import requests
 import sys
 from urllib.parse import urlparse
@@ -239,8 +238,9 @@ def upload_file(file:Path, metadata:Metadata, repo):
     }
     session = requests.session()
     
-    if "FLIT_CA" in os.environ:
-        session.verify(os.environ["FLIT_CA"])
+    if Path(os.environ['FLIT_CA']).exists:
+        session.verify(os.environ['FLIT_CA'])
+        log.info("Path to a Certificate detected in environement and verified")
 
     resp = session.post(**post_content)
     resp.raise_for_status()
