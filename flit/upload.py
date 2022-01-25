@@ -236,7 +236,7 @@ def upload_file(file:Path, metadata:Metadata, repo):
                     "files":files,
                     "auth":(repo['username'], repo['password']),
     }
-    session = requests.session()
+    session = requests.Session()
     
     if Path(os.environ['FLIT_CA']).exists:
         session.verify(os.environ['FLIT_CA'])
