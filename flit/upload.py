@@ -238,9 +238,9 @@ def upload_file(file:Path, metadata:Metadata, repo):
     }
     session = requests.Session()
     
-    if Path(os.environ['FLIT_CA']).exists:
+    if 'FLIT_CA' in os.environ['FLIT_CA']:
         session.verify = os.environ['FLIT_CA']
-        log.info("Path to a Certificate detected in environement and verified")
+        log.info("Path to a Certificate detected in environement")
 
     resp = session.post(**post_content)
     resp.raise_for_status()
