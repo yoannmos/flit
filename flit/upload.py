@@ -233,10 +233,11 @@ def upload_file(file:Path, metadata:Metadata, repo):
     log.info('Uploading %s...', file)
     post_content = {"url":repo['url'],
                     "data":data,
-                    "files":files,
-                    "auth":(repo['username'], repo['password']),
-    }
+                    "allow_redirects":False,
+                    "files":files}
+
     session = requests.Session()
+    session.auth = (repo['username'],  repo['password'])
     
     if 'FLIT_CA' in os.environ['FLIT_CA']:
         session.verify = os.environ['FLIT_CA']
